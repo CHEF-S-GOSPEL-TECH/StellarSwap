@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "contracts/amm",
+    "contracts/lp-token",
+]
+resolver = "2"
+
+[workspace.dependencies]
+soroban-sdk = { version = "21.0.0" }

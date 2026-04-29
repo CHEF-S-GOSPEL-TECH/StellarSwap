@@ -1,0 +1,23 @@
+# Rust
+/target
+**/*.rs.bk
+
+# Wasm build artifacts
+*.wasm
+
+# Node / SDK
+node_modules/
+sdk/dist/
+scripts/dist/
+
+# Stellar CLI
+.stellar/
+
+# Environment files
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
+*.swp
