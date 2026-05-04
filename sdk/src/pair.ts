@@ -1,26 +1,26 @@
 /**
- * Pool client
+ * Pair client
  *
- * Wraps the AMM contract's read and write methods.
- * Use this to interact with a deployed pool from a frontend or script.
+ * Wraps a pair contract's read and write methods.
+ * Use this to interact with a deployed pair from a frontend or script.
  */
 
 import { Contract, SorobanRpc, TransactionBuilder, Networks } from "@stellar/stellar-sdk";
 
-export interface PoolConfig {
-  contractId: string;       // deployed AMM contract address
+export interface PairConfig {
+  contractId: string;       // deployed pair contract address
   rpcUrl: string;           // Soroban RPC endpoint
   networkPassphrase: string; // e.g. Networks.TESTNET
 }
 
-export class PoolClient {
-  constructor(private config: PoolConfig) {}
+export class PairClient {
+  constructor(private config: PairConfig) {}
 
   /**
-   * Returns the current reserves of the pool as [reserveA, reserveB].
+   * Returns the current reserves of the pair as [reserveA, reserveB].
    */
   async getReserves(): Promise<[bigint, bigint]> {
-    // TODO: call AMM contract's get_reserves() via simulateTransaction
+    // TODO: call pair contract's get_reserves() via simulateTransaction
     throw new Error("not implemented");
   }
 
@@ -28,7 +28,7 @@ export class PoolClient {
    * Returns a price quote: how much token_out you'd receive for `amountIn` of `tokenIn`.
    */
   async getQuote(tokenIn: string, amountIn: bigint): Promise<bigint> {
-    // TODO: call AMM contract's get_quote(token_in, amount_in)
+    // TODO: call pair contract's get_quote(token_in, amount_in)
     throw new Error("not implemented");
   }
 

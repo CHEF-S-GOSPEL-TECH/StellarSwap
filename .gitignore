@@ -12,6 +12,7 @@ scripts/dist/
 
 # Stellar CLI
 .stellar/
+test_snapshots/
 
 # Environment files
 .env

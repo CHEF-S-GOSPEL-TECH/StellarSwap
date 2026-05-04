@@ -4,12 +4,12 @@
 /// LP Token Contract
 ///
 /// A standard SEP-41 fungible token that represents a liquidity provider's
-/// share of the AMM pool reserves.
+/// share of the pair reserves.
 ///
 /// ## Rules:
-/// - Only the AMM contract (set as `admin` during initialization) can mint or burn.
+/// - Only the pair contract (set as `admin` during initialization) can mint or burn.
 /// - Any holder can transfer their LP tokens freely.
-/// - Burning LP tokens is how liquidity is removed from the pool.
+/// - Burning LP tokens is how liquidity is removed from the pair.
 ///
 /// ## Why a separate contract?
 /// Keeping the LP token as its own contract means wallets, explorers, and
@@ -27,7 +27,7 @@ pub struct LpToken;
 #[contractimpl]
 impl LpToken {
     /// Initialize the LP token.
-    /// `admin` should be the AMM contract address.
+    /// `admin` should be the pair contract address.
     pub fn initialize(env: Env, admin: Address, name: String, symbol: String) {
         // TODO: store admin, name, symbol, set total_supply = 0
         todo!("implement initialize")
@@ -80,7 +80,7 @@ impl LpToken {
         todo!()
     }
 
-    // --- Admin-only (AMM contract calls these) ---
+    // --- Admin-only (pair contract calls these) ---
 
     pub fn mint(env: Env, to: Address, amount: i128) {
         // TODO: require auth from admin, increase balance and total_supply
@@ -88,7 +88,9 @@ impl LpToken {
     }
 
     pub fn burn(env: Env, from: Address, amount: i128) {
-        // TODO: require auth from `from`, decrease balance and total_supply
+        // TODO: require auth from admin (the pair contract), decrease `from` balance and total_supply
+        // NOTE: burn is called by the pair contract, not by the LP holder directly.
+        //       Auth must come from the pair (admin), not from `from`.
         todo!()
     }
 }
