@@ -1,20 +1,20 @@
 /**
- * Swap client
+ * Router client
  *
- * Helpers for getting swap quotes and building swap transactions.
+ * Periphery helpers for quotes and user-facing swap transactions.
  */
 
-import { PoolClient } from "./pool";
+import { PairClient } from "./pair";
 
-export class SwapClient {
-  constructor(private pool: PoolClient) {}
+export class RouterClient {
+  constructor(private pair: PairClient) {}
 
   /**
    * Returns how much `tokenOut` you'd receive for `amountIn` of `tokenIn`,
    * accounting for the 0.3% fee.
    */
   async quote(tokenIn: string, amountIn: bigint): Promise<bigint> {
-    // TODO: delegate to pool.getQuote
+    // TODO: delegate to pair.getQuote
     throw new Error("not implemented");
   }
 
@@ -36,7 +36,7 @@ export class SwapClient {
     // TODO:
     // 1. get quote
     // 2. calculate min_amount_out from slippage
-    // 3. build transaction invoking AMM contract's swap()
+    // 3. build transaction invoking pair contract's swap()
     throw new Error("not implemented");
   }
 }

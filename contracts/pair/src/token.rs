@@ -1,7 +1,7 @@
 /// Token Helpers
 ///
 /// Thin wrappers around the Soroban SEP-41 token interface.
-/// Used by pool.rs to transfer tokens and interact with the LP token contract.
+/// Used by pair.rs to transfer tokens and interact with the LP token contract.
 ///
 /// We don't implement a token here — we call into external token contracts
 /// using Soroban's cross-contract call mechanism.
@@ -15,7 +15,7 @@ pub fn transfer(env: &Env, token: &Address, from: &Address, to: &Address, amount
 }
 
 /// Mint `amount` LP tokens to `to`.
-/// Only callable by the AMM contract (which must be the LP token's admin).
+/// Only callable by the pair contract (which must be the LP token's admin).
 pub fn mint(env: &Env, lp_token: &Address, to: &Address, amount: i128) {
     // TODO: use soroban_sdk::token::Client to call lp_token.mint(to, amount)
     todo!("implement mint")

@@ -12,6 +12,7 @@ scripts/dist/
 
 # Stellar CLI
 .stellar/
+test_snapshots/
 
 # Environment files
 .env
@@ -21,3 +22,10 @@ scripts/dist/
 .vscode/
 .idea/
 *.swp
+
+# Local Rust config
+.cargo/
+
+# Kiro / AI agent internals
+.agents/
+.codex/

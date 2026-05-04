@@ -1,6 +1,6 @@
-/// AMM Integration Tests
+/// Pair Integration Tests
 ///
-/// These tests deploy the full contract stack (LP token + AMM) in a local
+/// These tests deploy the full contract stack (factory + pair + LP token) in a local
 /// Soroban test environment and exercise the complete user flows.
 ///
 /// Run with: cargo test

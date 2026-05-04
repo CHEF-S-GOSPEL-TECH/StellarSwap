@@ -1,19 +1,21 @@
 /**
  * Deploy Script
  *
- * Deploys the LP token contract and AMM contract to Stellar testnet (or mainnet).
+ * Deploys the factory, pair, and LP token contracts to Stellar testnet (or mainnet).
  *
  * Usage:
  *   npx ts-node scripts/deploy.ts --network testnet --secret <your-secret-key>
  *
  * What it does:
- *   1. Uploads LP token WASM → gets a wasm_hash
- *   2. Deploys LP token contract instance
- *   3. Uploads AMM WASM → gets a wasm_hash
- *   4. Deploys AMM contract instance
- *   5. Calls AMM.initialize(token_a, token_b, lp_token)
- *   6. Calls LpToken.initialize(amm_address, "DEX LP Token", "DLP")
- *   7. Prints deployed contract IDs
+ *   1. Uploads factory WASM -> gets a wasm_hash
+ *   2. Deploys factory contract instance
+ *   3. Uploads pair WASM -> gets a wasm_hash
+ *   4. Deploys pair contract instance
+ *   5. Uploads LP token WASM -> gets a wasm_hash
+ *   6. Deploys LP token contract instance
+ *   7. Calls Pair.initialize(token_a, token_b, lp_token)
+ *   8. Calls LpToken.initialize(pair_address, "DEX LP Token", "DLP")
+ *   9. Prints deployed contract IDs
  */
 
 // TODO: implement deploy script using @stellar/stellar-sdk
