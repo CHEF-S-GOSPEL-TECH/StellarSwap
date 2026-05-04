@@ -22,3 +22,10 @@ test_snapshots/
 .vscode/
 .idea/
 *.swp
+
+# Local Rust config
+.cargo/
+
+# Kiro / AI agent internals
+.agents/
+.codex/
