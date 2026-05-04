@@ -95,8 +95,12 @@ pub fn check_invariant(
     let adjusted_a = balance_a * 1000 - amount_in_a * 3;
     let adjusted_b = balance_b * 1000 - amount_in_b * 3;
     assert!(
-        adjusted_a.checked_mul(adjusted_b).expect("invariant check overflow")
-            >= reserve_a.checked_mul(reserve_b * 1_000_000).expect("invariant check overflow"),
+        adjusted_a
+            .checked_mul(adjusted_b)
+            .expect("invariant check overflow")
+            >= reserve_a
+                .checked_mul(reserve_b * 1_000_000)
+                .expect("invariant check overflow"),
         "invariant violated: k decreased after swap"
     );
 }

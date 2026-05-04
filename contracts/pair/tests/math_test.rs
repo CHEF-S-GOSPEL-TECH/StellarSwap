@@ -1,4 +1,6 @@
-use dex_pair::math::{calc_lp_tokens_to_mint, check_invariant, get_amount_out, sqrt, MINIMUM_LIQUIDITY};
+use dex_pair::math::{
+    calc_lp_tokens_to_mint, check_invariant, get_amount_out, sqrt, MINIMUM_LIQUIDITY,
+};
 
 #[test]
 fn amount_out_applies_constant_product_fee() {
