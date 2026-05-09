@@ -1,14 +1,14 @@
-# Dex Protocol — Stellar AMM
+# StellarSwap — Stellar AMM
 
 A constant-product AMM for [Stellar](https://stellar.org), built with [Soroban](https://soroban.stellar.org) smart contracts.
 
-> **Status:** Core math, pair initialization, and invariant enforcement are implemented and tested. Swap execution, liquidity flows, LP token, SDK, and deployment are open for contributors.
+> **Status:** LP token (SEP-41), swap execution, core math, and pair initialization are implemented and tested (29 tests passing). Liquidity flows (`add_liquidity`, `remove_liquidity`), factory deployment, SDK, and testnet scripts are open for contributors.
 
 ---
 
 ## What is this?
 
-A decentralized exchange protocol built natively on Stellar. A pair contract holds two SEP-41 tokens as reserves and prices trades using the constant-product formula. Liquidity providers deposit tokens, receive LP tokens representing their share, and earn fees from every swap.
+StellarSwap is a decentralized exchange built natively on Stellar. A pair contract holds two SEP-41 tokens as reserves and prices trades using the constant-product formula. Liquidity providers deposit tokens, receive LP tokens representing their share, and earn fees from every swap.
 
 The protocol follows the same core/periphery architecture used by constant-product AMMs — a minimal factory and pair in core, with routing and SDK tooling in periphery — implemented in Rust on Soroban.
 
@@ -16,13 +16,11 @@ The protocol follows the same core/periphery architecture used by constant-produ
 
 ## Why Stellar?
 
-Stellar's properties are genuinely better for an AMM than most chains:
-
-- **5-second finality.** Trades settle in seconds, not minutes. No waiting for block confirmations.
-- **Sub-cent fees.** A swap costs a fraction of a cent. On Ethereum, gas fees can exceed the trade value for small amounts.
-- **Soroban smart contracts.** Stellar's contract platform runs Rust compiled to WASM. Rust's type system and ownership model make it significantly harder to write the class of bugs that have drained hundreds of millions from EVM contracts.
-- **No front-running within a ledger.** Stellar's consensus (SCP) closes ledgers with a defined transaction set — there's no miner/validator who can reorder transactions within a ledger for profit the way EVM miners can.
-- **No native open-source AMM.** There is no constant-product DEX on Stellar today. This is the foundation for one.
+- **5-second finality.** Trades settle in seconds, not minutes.
+- **Sub-cent fees.** A swap costs a fraction of a cent.
+- **Soroban smart contracts.** Rust compiled to WASM. Significantly harder to write the class of bugs that have drained hundreds of millions from EVM contracts.
+- **No front-running within a ledger.** Stellar's consensus (SCP) closes ledgers with a defined transaction set — no validator can reorder transactions for profit.
+- **No native open-source AMM.** There is no constant-product DEX on Stellar today. StellarSwap is the foundation for one.
 
 ---
 
@@ -52,7 +50,7 @@ First deposit mints `sqrt(amount_a × amount_b)` LP tokens. A small amount (`MIN
 
 The protocol is split into **core** and **periphery**:
 
-- **Core** — factory and pair contracts. Hold user funds, enforce the invariant. Must stay minimal.
+- **Core** — factory, pair, and LP token contracts. Hold user funds, enforce the invariant. Must stay minimal.
 - **Periphery** — TypeScript SDK and scripts. No on-chain privileges. Handles routing, slippage, and transaction building.
 
 ```
@@ -61,7 +59,7 @@ Factory ──deploys──► Pair ──mint/burn──► LP Token
 SDK (periphery) ──calls──► Factory / Pair via Soroban RPC
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the full system map, data flows, and implementation plan.
+See [docs/architecture.md](docs/architecture.md) for the full system map and data flows.
 
 ---
 
@@ -73,13 +71,17 @@ contracts/
   pair/
     src/
       lib.rs        # Contract entry point
-      pair.rs       # State, reserves, liquidity and swap logic
+      pair.rs       # State, reserves, swap logic
       math.rs       # Pure AMM math (implemented + tested)
       token.rs      # SEP-41 cross-contract call helpers
     tests/
       math_test.rs        # 7 passing tests
       initialize_test.rs  # 5 passing tests
-  lp-token/         # SEP-41 LP token contract
+      swap_test.rs        # 5 passing tests
+  lp-token/
+    src/lib.rs      # Full SEP-41 LP token (implemented + tested)
+    tests/
+      lp_token_test.rs    # 10 passing tests
 
 sdk/src/
   library.ts        # sortTokens, proportional quote helper
@@ -91,9 +93,11 @@ scripts/
   seed-liquidity.ts # Liquidity seeding scaffold
 
 docs/
-  architecture.md   # System design, data flows, issue plan
-  contracts.md      # Every function, storage layout, implementation steps
-  contributing.md   # How to contribute
+  architecture.md       # System design, data flows, issue plan
+  contracts.md          # Every function, storage layout, implementation steps
+  contributing.md       # How to contribute
+  plan.md               # Build plan, roadmap, maintainer vs contributor split
+  implementation-log.md # Detailed record of what was built and how
 ```
 
 ---
@@ -110,13 +114,14 @@ docs/
 | Reserve reads + quote simulation | ✅ Done + tested |
 | Factory initialization | ✅ Done + tested |
 | Token sorting in factory | ✅ Done |
-| `add_liquidity` | 🔲 Stubbed — open issue |
-| `remove_liquidity` | 🔲 Stubbed — open issue |
-| `swap` execution | 🔲 Stubbed — open issue |
-| LP token contract (SEP-41) | 🔲 Stubbed — open issue |
-| Factory `create_pair` / `get_pair` | 🔲 Stubbed — open issue |
-| TypeScript SDK | 🔲 Scaffolded — open issues |
-| Testnet deployment | 🔲 Scaffolded — open issue |
+| LP token contract (SEP-41) | ✅ Done + tested |
+| Token cross-contract helpers | ✅ Done |
+| `swap` execution | ✅ Done + tested |
+| `add_liquidity` | 🔲 Stubbed — open issue #9 |
+| `remove_liquidity` | 🔲 Stubbed — open issue #10 |
+| Factory `create_pair` / `get_pair` | 🔲 Stubbed — open issues #13, #14 |
+| TypeScript SDK | 🔲 Scaffolded — open issues #15–17 |
+| Testnet deployment | 🔲 Scaffolded — open issues #19, #20 |
 
 ---
 
@@ -130,7 +135,7 @@ cargo install --locked stellar-cli --features opt
 # Build
 cargo build
 
-# Test (14 tests, all passing)
+# Test (29 tests, all passing)
 cargo test
 ```
 
@@ -140,9 +145,17 @@ cargo test
 
 See [docs/contributing.md](docs/contributing.md) for setup and guidelines.
 
-Work is broken into layers in [docs/architecture.md](docs/architecture.md#issue-planning). The first open layer is the LP token contract — it has no dependencies and is a good starting point.
+Work is broken into layers in [docs/plan.md](docs/plan.md). The first open layer is `add_liquidity` and `remove_liquidity` — the math and token helpers they depend on are already implemented.
 
 All PRs target `develop`. `main` is stable only.
+
+---
+
+## Roadmap
+
+- **StellarSwap v1** — constant-product AMM (this repo)
+- **StellarSwap v2** — concentrated liquidity (future)
+- **StellarSwap v3** — singleton pool manager + hooks (future)
 
 ---
 
