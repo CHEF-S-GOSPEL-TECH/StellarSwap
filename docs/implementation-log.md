@@ -9,7 +9,7 @@ Update this file every time a layer is completed.
 
 ### What was already done before this session (14 tests)
 
-These were implemented before the wave application work began:
+These were implemented before contributor issues were opened:
 
 **`contracts/pair/src/math.rs`** — pure AMM math, no storage
 - `get_amount_out(amount_in, reserve_in, reserve_out)` — constant-product swap output with 0.3% fee
