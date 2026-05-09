@@ -343,6 +343,7 @@ dependencies = [
 name = "dex-pair"
 version = "0.1.0"
 dependencies = [
+ "lp-token",
  "soroban-sdk",
 ]
 

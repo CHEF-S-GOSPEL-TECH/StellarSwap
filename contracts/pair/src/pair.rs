@@ -88,19 +88,54 @@ pub fn remove_liquidity(env: &Env, to: Address) -> (i128, i128) {
 /// Caller must transfer token_in to this contract before calling.
 /// amount_in is derived from the balance delta (v2 model — not trusted from caller).
 pub fn swap(env: &Env, to: Address, token_in: Address, min_amount_out: i128) -> i128 {
-    // TODO:
-    // 1. require auth from `to`
-    // 2. determine which token is in/out and fetch corresponding reserves (reserve_in, reserve_out)
-    // 3. amount_in = balance_of(token_in, this_contract) - reserve_in  (balance delta)
-    // 4. calculate amount_out via math::get_amount_out(amount_in, reserve_in, reserve_out)
-    // 5. assert amount_out >= min_amount_out (slippage check)
-    // 6. transfer token_out from this contract → `to`
-    // 7. read new balances (balance_a, balance_b) after the transfer
-    // 8. assert invariant via math::check_invariant(balance_a, balance_b, amount_in_a, amount_in_b, reserve_a, reserve_b)
-    //    — this is the core safety guarantee: k cannot decrease after fees (whitepaper eq. 11)
-    // 9. update stored reserves to (balance_a, balance_b)
-    // 10. return amount_out
-    todo!("implement swap")
+    to.require_auth();
+
+    let storage = env.storage().instance();
+    let token_a: Address = storage.get(&DataKey::TokenA).expect("not initialized");
+    let token_b: Address = storage.get(&DataKey::TokenB).expect("not initialized");
+    let (reserve_a, reserve_b) = get_reserves(env);
+
+    let (reserve_in, reserve_out, token_out) = if token_in == token_a {
+        (reserve_a, reserve_b, token_b.clone())
+    } else if token_in == token_b {
+        (reserve_b, reserve_a, token_a.clone())
+    } else {
+        panic!("token_in is not part of this pair")
+    };
+
+    let this = env.current_contract_address();
+    let amount_in = token::balance(env, &token_in, &this) - reserve_in;
+    let amount_out = math::get_amount_out(amount_in, reserve_in, reserve_out);
+
+    assert!(
+        amount_out >= min_amount_out,
+        "slippage: amount_out below minimum"
+    );
+
+    token::transfer(env, &token_out, &this, &to, amount_out);
+
+    let balance_a = token::balance(env, &token_a, &this);
+    let balance_b = token::balance(env, &token_b, &this);
+
+    let (amount_in_a, amount_in_b) = if token_in == token_a {
+        (amount_in, 0_i128)
+    } else {
+        (0_i128, amount_in)
+    };
+
+    math::check_invariant(
+        balance_a,
+        balance_b,
+        amount_in_a,
+        amount_in_b,
+        reserve_a,
+        reserve_b,
+    );
+
+    storage.set(&DataKey::ReserveA, &balance_a);
+    storage.set(&DataKey::ReserveB, &balance_b);
+
+    amount_out
 }
 
 // ---------------------------------------------------------------------------

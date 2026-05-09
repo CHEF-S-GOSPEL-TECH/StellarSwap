@@ -29,3 +29,8 @@ test_snapshots/
 # Kiro / AI agent internals
 .agents/
 .codex/
+
+# Private issue scaffolding
+docs/issues.md
+scripts/issues/
+scripts/create-issues.sh

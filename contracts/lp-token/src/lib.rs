@@ -1,68 +1,66 @@
 #![no_std]
-#![allow(unused_variables, dead_code, unused_imports)]
 
-/// LP Token Contract
-///
-/// A standard SEP-41 fungible token that represents a liquidity provider's
-/// share of the pair reserves.
-///
-/// ## Rules:
-/// - Only the pair contract (set as `admin` during initialization) can mint or burn.
-/// - Any holder can transfer their LP tokens freely.
-/// - Burning LP tokens is how liquidity is removed from the pair.
-///
-/// ## Why a separate contract?
-/// Keeping the LP token as its own contract means wallets, explorers, and
-/// other DeFi protocols can recognize and display it as a standard token.
-///
-/// ## Implementation note:
-/// Rather than writing a token from scratch, this contract wraps or extends
-/// the Soroban example token. See:
-/// https://github.com/stellar/soroban-examples/tree/main/token
-use soroban_sdk::{contract, contractimpl, Address, Env, String};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String};
+
+#[derive(Clone)]
+#[contracttype]
+enum DataKey {
+    Admin,
+    Name,
+    Symbol,
+    TotalSupply,
+    Balance(Address),
+    Allowance(Address, Address), // (from, spender)
+}
 
 #[contract]
 pub struct LpToken;
 
 #[contractimpl]
 impl LpToken {
-    /// Initialize the LP token.
-    /// `admin` should be the pair contract address.
     pub fn initialize(env: Env, admin: Address, name: String, symbol: String) {
-        // TODO: store admin, name, symbol, set total_supply = 0
-        todo!("implement initialize")
+        let storage = env.storage().instance();
+        assert!(
+            !storage.has(&DataKey::Admin),
+            "lp token already initialized"
+        );
+        storage.set(&DataKey::Admin, &admin);
+        storage.set(&DataKey::Name, &name);
+        storage.set(&DataKey::Symbol, &symbol);
+        storage.set(&DataKey::TotalSupply, &0_i128);
     }
 
-    // --- SEP-41 interface ---
-
     pub fn name(env: Env) -> String {
-        todo!()
+        env.storage().instance().get(&DataKey::Name).unwrap()
     }
 
     pub fn symbol(env: Env) -> String {
-        todo!()
+        env.storage().instance().get(&DataKey::Symbol).unwrap()
     }
 
     pub fn decimals(_env: Env) -> u32 {
-        7 // Stellar standard
+        7
     }
 
     pub fn total_supply(env: Env) -> i128 {
-        todo!()
+        env.storage()
+            .instance()
+            .get(&DataKey::TotalSupply)
+            .unwrap_or(0)
     }
 
     pub fn balance(env: Env, id: Address) -> i128 {
-        todo!()
+        env.storage()
+            .persistent()
+            .get(&DataKey::Balance(id))
+            .unwrap_or(0)
     }
 
-    pub fn transfer(env: Env, from: Address, to: Address, amount: i128) {
-        // TODO: require auth from `from`, update balances
-        todo!()
-    }
-
-    pub fn transfer_from(env: Env, spender: Address, from: Address, to: Address, amount: i128) {
-        // TODO: require auth from `spender`, check allowance, update balances
-        todo!()
+    pub fn allowance(env: Env, from: Address, spender: Address) -> i128 {
+        env.storage()
+            .persistent()
+            .get(&DataKey::Allowance(from, spender))
+            .unwrap_or(0)
     }
 
     pub fn approve(
@@ -70,27 +68,90 @@ impl LpToken {
         from: Address,
         spender: Address,
         amount: i128,
-        expiration_ledger: u32,
+        _expiration_ledger: u32,
     ) {
-        // TODO: require auth from `from`, store allowance
-        todo!()
+        from.require_auth();
+        env.storage()
+            .persistent()
+            .set(&DataKey::Allowance(from, spender), &amount);
     }
 
-    pub fn allowance(env: Env, from: Address, spender: Address) -> i128 {
-        todo!()
+    pub fn transfer(env: Env, from: Address, to: Address, amount: i128) {
+        from.require_auth();
+        Self::move_balance(&env, &from, &to, amount);
     }
 
-    // --- Admin-only (pair contract calls these) ---
+    pub fn transfer_from(env: Env, spender: Address, from: Address, to: Address, amount: i128) {
+        spender.require_auth();
+        let key = DataKey::Allowance(from.clone(), spender);
+        let allowance: i128 = env.storage().persistent().get(&key).unwrap_or(0);
+        assert!(allowance >= amount, "insufficient allowance");
+        env.storage().persistent().set(&key, &(allowance - amount));
+        Self::move_balance(&env, &from, &to, amount);
+    }
 
     pub fn mint(env: Env, to: Address, amount: i128) {
-        // TODO: require auth from admin, increase balance and total_supply
-        todo!()
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+        let bal: i128 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Balance(to.clone()))
+            .unwrap_or(0);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Balance(to), &(bal + amount));
+        let supply: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::TotalSupply)
+            .unwrap_or(0);
+        env.storage()
+            .instance()
+            .set(&DataKey::TotalSupply, &(supply + amount));
     }
 
     pub fn burn(env: Env, from: Address, amount: i128) {
-        // TODO: require auth from admin (the pair contract), decrease `from` balance and total_supply
-        // NOTE: burn is called by the pair contract, not by the LP holder directly.
-        //       Auth must come from the pair (admin), not from `from`.
-        todo!()
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+        let bal: i128 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Balance(from.clone()))
+            .unwrap_or(0);
+        assert!(bal >= amount, "insufficient balance");
+        env.storage()
+            .persistent()
+            .set(&DataKey::Balance(from), &(bal - amount));
+        let supply: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::TotalSupply)
+            .unwrap_or(0);
+        env.storage()
+            .instance()
+            .set(&DataKey::TotalSupply, &(supply - amount));
+    }
+
+    // --- internal ---
+
+    fn move_balance(env: &Env, from: &Address, to: &Address, amount: i128) {
+        let from_bal: i128 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Balance(from.clone()))
+            .unwrap_or(0);
+        assert!(from_bal >= amount, "insufficient balance");
+        env.storage()
+            .persistent()
+            .set(&DataKey::Balance(from.clone()), &(from_bal - amount));
+        let to_bal: i128 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Balance(to.clone()))
+            .unwrap_or(0);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Balance(to.clone()), &(to_bal + amount));
     }
 }

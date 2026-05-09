@@ -1,34 +1,29 @@
-/// Token Helpers
-///
-/// Thin wrappers around the Soroban SEP-41 token interface.
-/// Used by pair.rs to transfer tokens and interact with the LP token contract.
-///
-/// We don't implement a token here — we call into external token contracts
-/// using Soroban's cross-contract call mechanism.
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{contractclient, token::Client as TokenClient, Address, Env};
 
-/// Transfer `amount` of `token` from `from` → `to`.
-/// Requires that `from` has authorized this contract to spend on their behalf.
+/// Minimal client for LP token admin functions not in the standard SEP-41 interface.
+#[contractclient(name = "LpTokenClient")]
+pub trait LpTokenTrait {
+    fn mint(env: Env, to: Address, amount: i128);
+    fn burn(env: Env, from: Address, amount: i128);
+    fn total_supply(env: Env) -> i128;
+}
+
 pub fn transfer(env: &Env, token: &Address, from: &Address, to: &Address, amount: i128) {
-    // TODO: use soroban_sdk::token::Client to call token.transfer(from, to, amount)
-    todo!("implement transfer")
+    TokenClient::new(env, token).transfer(from, to, &amount);
 }
 
-/// Mint `amount` LP tokens to `to`.
-/// Only callable by the pair contract (which must be the LP token's admin).
+pub fn balance(env: &Env, token: &Address, account: &Address) -> i128 {
+    TokenClient::new(env, token).balance(account)
+}
+
 pub fn mint(env: &Env, lp_token: &Address, to: &Address, amount: i128) {
-    // TODO: use soroban_sdk::token::Client to call lp_token.mint(to, amount)
-    todo!("implement mint")
+    LpTokenClient::new(env, lp_token).mint(to, &amount);
 }
 
-/// Burn `amount` LP tokens from `from`.
 pub fn burn(env: &Env, lp_token: &Address, from: &Address, amount: i128) {
-    // TODO: call lp_token.burn(from, amount)
-    todo!("implement burn")
+    LpTokenClient::new(env, lp_token).burn(from, &amount);
 }
 
-/// Returns the total supply of the LP token.
 pub fn total_supply(env: &Env, lp_token: &Address) -> i128 {
-    // TODO: call lp_token.total_supply()
-    todo!("implement total_supply")
+    LpTokenClient::new(env, lp_token).total_supply()
 }
