@@ -19,7 +19,7 @@
 
 /// Permanently locked liquidity on the first deposit.
 ///
-/// This mirrors the Uniswap V2 design decision that prevents the total LP
+/// This design decision prevents the total LP
 /// supply from ever reaching zero and reduces rounding-error edge cases.
 pub const MINIMUM_LIQUIDITY: i128 = 1_000;
 

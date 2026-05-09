@@ -7,7 +7,7 @@ This is StellarSwap v1 — the foundational DEX layer for the Stellar ecosystem.
 
 ## What StellarSwap Is
 
-StellarSwap follows the same architecture as Uniswap V2 — a constant-product AMM with a factory/pair/LP-token model — implemented natively on Stellar using Soroban (Rust → WASM). It is not a fork or reference to Uniswap. It is an independent implementation of the constant-product formula designed for Stellar's execution model, auth system, and token standard (SEP-41).
+StellarSwap is a constant-product AMM with a factory/pair/LP-token model — implemented natively on Stellar using Soroban (Rust → WASM). It is an independent implementation of the constant-product formula designed for Stellar's execution model, auth system, and token standard (SEP-41).
 
 **StellarSwap v1** = constant-product AMM (this repo)
 **StellarSwap v2** = concentrated liquidity (future — not in scope)
@@ -82,9 +82,9 @@ signal that this is a real DEX.
 
 ---
 
-## What Contributors Implement (Wave Issues)
+## What Contributors Implement (Open Issues)
 
-The following are left as well-scoped GitHub issues for wave contributors.
+The following are left as well-scoped GitHub issues for contributors.
 
 ### Rust (Soroban)
 
@@ -108,7 +108,7 @@ The following are left as well-scoped GitHub issues for wave contributors.
 | #20 | Testnet liquidity seeding script | Easy |
 
 That's 10 well-scoped issues across Rust and TypeScript, covering easy through
-hard difficulty. Enough to fill a wave without padding.
+hard difficulty. Enough to keep contributors engaged across multiple sprints.
 
 ---
 
